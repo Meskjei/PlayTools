@@ -12,6 +12,8 @@ class DiscordIPC {
     public static let shared = DiscordIPC()
 
     func initialize() {
+        // Touchstone sessions must not start Discord presence or its optional NIO pipeline.
+        guard ProcessInfo.processInfo.environment["TOUCHSTONE_AUTOMATION_TOKEN"] == nil else { return }
         if PlaySettings.shared.discordActivity.enable {
             let ipc: SwordRPC
             let custom = PlaySettings.shared.discordActivity
