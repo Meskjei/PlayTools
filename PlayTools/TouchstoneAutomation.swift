@@ -16,11 +16,15 @@ final class TouchstoneAutomation {
 
     static func startIfRequested() {
         let env = ProcessInfo.processInfo.environment
+        let launchMarker = getenv("TOUCHSTONE_AUTOMATION_TOKEN") != nil
+        let foundationMarker = env["TOUCHSTONE_AUTOMATION_TOKEN"] != nil
+        print("[touchstone] startup launch_marker=\(launchMarker) foundation_marker=\(foundationMarker) phone_requested=\(env["TOUCHSTONE_PHONE_WINDOW"] == "1") discord=removed")
         guard let token = env["TOUCHSTONE_AUTOMATION_TOKEN"], token.count >= 32,
               let rawPort = env["TOUCHSTONE_AUTOMATION_PORT"], let port = UInt16(rawPort), port >= 1024,
               let service = try? TouchstoneAutomation(token: token, port: port) else { return }
         instance = service
         service.start()
+        print("[touchstone] startup listener_requested=true")
     }
 
     private init(token: String, port: UInt16) throws {
@@ -78,7 +82,13 @@ final class TouchstoneAutomation {
                 "windowMode": phoneWindowConfigured ? "phone" : "native",
                 "viewportFixed": phoneWindowConfigured,
                 "foreground": UIApplication.shared.applicationState == .active,
-                "capabilities": ["screenshot", "tree", "tap", "swipe", "longPress", "type", "clearText"]])
+                "runtime": ["discord": "removed"],
+                "capabilities": ["activate", "screenshot", "tree", "tap", "swipe", "longPress", "type", "clearText"]])
+        case "activate":
+            guard let activate = AKInterface.shared?.activateOwnApplication, activate() else {
+                reply(connection, error: "activation_unavailable"); return
+            }
+            reply(connection, result: ["delivered": true, "pid": ProcessInfo.processInfo.processIdentifier])
         case "tree":
             var nodes: [[String: Any]] = []
             collectViews(window, window: window, parent: nil, depth: 0, nodes: &nodes)

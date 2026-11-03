@@ -78,6 +78,11 @@ class AKPlugin: NSObject, Plugin {
     private weak var phoneWindow: NSWindow?
     private var phoneCaptureScale: CGFloat?
 
+    func activateOwnApplication() -> Bool {
+        // Activate only this process; never ask LaunchServices to start another instance.
+        return NSRunningApplication.current.activate(options: [.activateIgnoringOtherApps])
+    }
+
     func configurePhoneWindow(_ object: NSObject) -> Bool {
         guard ProcessInfo.processInfo.environment["TOUCHSTONE_PHONE_WINDOW"] == "1",
               let window = object as? NSWindow, NSApplication.shared.windows.contains(where: { $0 === window }),
