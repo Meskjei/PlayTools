@@ -11,6 +11,23 @@ import Foundation
 import ObjectiveC.runtime
 import ScreenCaptureKit
 
+enum WindowCaptureSupport {
+    static var isAvailable: Bool {
+        guard #available(macOS 14.4, *) else { return false }
+        return hasRequiredMethods(shareableContent: NSClassFromString("SCShareableContent"),
+                                  screenshotManager: NSClassFromString("SCScreenshotManager"))
+    }
+
+    static func hasRequiredMethods(shareableContent: AnyClass?, screenshotManager: AnyClass?) -> Bool {
+        guard let shareableContent = shareableContent, let screenshotManager = screenshotManager else { return false }
+        // Injected iOS apps can pass the OS version check even when the host lacks this selector.
+        return class_getClassMethod(shareableContent,
+            NSSelectorFromString("getCurrentProcessShareableContentWithCompletionHandler:")) != nil &&
+            class_getClassMethod(screenshotManager,
+            NSSelectorFromString("captureImageWithFilter:configuration:completionHandler:")) != nil
+    }
+}
+
 // Add a lightweight struct so we can decode only the flag we care about
 private struct AKAppSettingsData: Codable {
     var hideTitleBar: Bool?
@@ -83,8 +100,7 @@ class AKPlugin: NSObject, Plugin {
     }
 
     var supportsWindowCapture: Bool {
-        if #available(macOS 14.4, *) { return true }
-        return false
+        WindowCaptureSupport.isAvailable
     }
 
     func pointerInWindow(_ object: NSObject) -> CGPoint {
@@ -97,7 +113,7 @@ class AKPlugin: NSObject, Plugin {
     }
 
     func captureWindow(_ object: NSObject, completion: @escaping (Data?, String?) -> Void) {
-        guard #available(macOS 14.4, *), let window = object as? NSWindow,
+        guard #available(macOS 14.4, *), supportsWindowCapture, let window = object as? NSWindow,
               NSApplication.shared.windows.contains(where: { $0 === window }),
               window.isVisible, !window.isMiniaturized, window.windowNumber > 0 else {
             completion(nil, "capture_window_unavailable"); return
