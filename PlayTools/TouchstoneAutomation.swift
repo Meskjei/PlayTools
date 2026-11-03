@@ -72,8 +72,12 @@ final class TouchstoneAutomation {
         }
         switch command {
         case "info":
-            if !phoneWindowConfigured, let native = window.nsWindow, let configure = AKInterface.shared?.configurePhoneWindow {
-                phoneWindowConfigured = configure(native)
+            if !phoneWindowConfigured, let native = window.nsWindow {
+                if let configure = AKInterface.shared?.configurePhoneViewport {
+                    phoneWindowConfigured = configure(native, window.bounds.size)
+                } else if let configure = AKInterface.shared?.configurePhoneWindow {
+                    phoneWindowConfigured = configure(native)
+                }
             }
             reply(connection, result: ["protocol": 1, "bundleId": Bundle.main.bundleIdentifier ?? "",
                 "pid": ProcessInfo.processInfo.processIdentifier, "width": window.bounds.width, "height": window.bounds.height,

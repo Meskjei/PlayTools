@@ -44,6 +44,15 @@ int main(void) {
         assert(!shangou_activity_is_initializer(base + 0x38b20, base, &block));
         block.flags ^= 1u << 24; block.function = (void *)(base + 0x46838);
         assert(!shangou_activity_is_initializer(base + 0x38b20, base, &block));
+        block.function = (void *)(base + 0x69200);
+        assert(shangou_activity_is_initializer(base + 0x62e00, base, &block));
+        assert(!shangou_activity_is_initializer(base + 0x38b20, base, &block));
+        block.function = (void *)(base + 0x46834);
+        assert(!shangou_activity_is_initializer(base + 0x62e00, base, &block));
+        block.function = (void *)(base + 0x69204);
+        assert(!shangou_activity_is_initializer(base + 0x62e00, base, &block));
+        block.function = (void *)(base + 0x69200); block.invoke = (void *)(base + 0x25ec0);
+        assert(!shangou_activity_is_initializer(base + 0x62e00, base, &block));
 
         // A real compiler-generated block proves retained captures are disposed by the original descriptor.
         Capture *capture = [Capture new];

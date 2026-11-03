@@ -7,6 +7,14 @@ func fittedPhoneWindowSize(available: CGSize) -> CGSize? {
     return CGSize(width: 390 * scale, height: 844 * scale)
 }
 
+func fittedPhoneViewportSize(available: CGSize, content: CGSize, logical: CGSize) -> CGSize? {
+    let values = [available.width, available.height, content.width, content.height, logical.width, logical.height]
+    guard values.allSatisfy({ $0.isFinite && $0 > 0 }) else { return nil }
+    let target = CGSize(width: 390 * content.width / logical.width, height: 844 * content.height / logical.height)
+    let fit = min(1, available.width / target.width, available.height / target.height)
+    return CGSize(width: target.width * fit, height: target.height * fit)
+}
+
 /// ScreenCaptureKit's window image includes the title bar; UIKit's coordinates do not.
 func windowContentCrop(frameSize: CGSize, contentRect: CGRect, imageSize: CGSize) -> CGRect? {
     let values = [frameSize.width, frameSize.height, imageSize.width, imageSize.height,

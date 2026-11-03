@@ -1,8 +1,10 @@
-# Delivery Live Activity compatibility
+# Delivery and recommendation Live Activity compatibility
 
 `sh Tests/ShangouLiveActivity/run.sh` checks App/framework UUID and host-build isolation, call-site and Swift callback matching, and a real block's capture retain/dispose lifetime. Nonmatching blocks keep their original invocation; no business callback is retried.
 
 The 12.10.61 / 59536680 enterprise Shangou package schedules a main-queue block in ELEWidgteNode (`ABAF96DD-57BC-4E3D-947A-28A36FA1A795`, return PC `0x38b20`). Its block invokes the void Swift initializer at `0x46834` through `0x25ebc`. The initializer resolves `LiveActivityManager<DeliveryAttributes>` before checking availability and crashes in Swift protocol witness resolution on macOS 14.2.1 / 23C71. The same callback is isolated on the local verification build 26B123. Other hosts and packages remain unchanged pending evidence.
+
+The `.27` colleague report confirms the new runtime UUID was loaded, but the second concrete specialization, `LiveActivityManager<RecommendAttributes>`, crashed at witness resolution (`0x62654`, initializer `0x62f14`). Its scheduler copies a block at `0x62dfc` (return PC `0x62e00`), carrying the Swift thunk `0x69200`, which branches to `0x62f14`. Both scheduler/callback pairs are now checked independently, including original instruction bytes. Cross-pair and nearby-offset matches must be rejected. Disassembly contains only these two concrete initializer call sites; the other initializer call is the generic allocating wrapper. This remains an optional Live Activity compatibility guard for the verified binary, not a claim that arbitrary Swift generic crashes are fixed.
 
 The runtime recognizes the image at load/dlopen time using UUID and original instruction bytes, without resolving Swift types or Objective-C classes under the loader lock. Only the newly copied heap block's invocation is replaced with a void no-op; the original descriptor, captures and disposal remain intact. This covers both Objective-C and Swift enable routes which reach that shared scheduling function, unlike an Objective-C property swizzle. It does not modify the IPA, signed code pages, ActivityKit, system Swift libraries, generic witness tables or other blocks.
 

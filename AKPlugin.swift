@@ -84,12 +84,20 @@ class AKPlugin: NSObject, Plugin {
     }
 
     func configurePhoneWindow(_ object: NSObject) -> Bool {
+        guard let window = object as? NSWindow else { return false }
+        return configurePhoneViewport(object, logicalSize: window.contentLayoutRect.size)
+    }
+
+    func configurePhoneViewport(_ object: NSObject, logicalSize: CGSize) -> Bool {
         guard ProcessInfo.processInfo.environment["TOUCHSTONE_PHONE_WINDOW"] == "1",
               let window = object as? NSWindow, NSApplication.shared.windows.contains(where: { $0 === window }),
               let display = window.screen ?? NSScreen.main else { return false }
         let visible = display.visibleFrame
         let titleHeight = max(0, window.frame.height - window.contentLayoutRect.height)
-        guard let size = fittedPhoneWindowSize(available: CGSize(width: visible.width - 32, height: visible.height - titleHeight - 32)) else { return false }
+        let content = window.contentLayoutRect.size
+        guard logicalSize.width > 0, logicalSize.height > 0,
+              let size = fittedPhoneViewportSize(available: CGSize(width: visible.width - 32, height: visible.height - titleHeight - 32),
+                                               content: content, logical: logicalSize) else { return false }
         window.contentMinSize = NSSize(width: min(window.contentMinSize.width, size.width), height: min(window.contentMinSize.height, size.height))
         window.contentAspectRatio = NSSize(width: 390, height: 844)
         window.setContentSize(size)

@@ -37,4 +37,5 @@ public protocol Plugin: NSObjectProtocol {
     /// Normalized coordinates in the same content rectangle used by captureWindow.
     @objc optional func pointerInWindow(_ window: NSObject) -> CGPoint
     @objc optional func configurePhoneWindow(_ window: NSObject) -> Bool
+    @objc optional func configurePhoneViewport(_ window: NSObject, logicalSize: CGSize) -> Bool
 }

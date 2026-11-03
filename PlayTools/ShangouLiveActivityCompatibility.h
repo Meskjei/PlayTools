@@ -48,9 +48,14 @@ struct ShangouActivityBlock {
 };
 static int shangou_activity_is_initializer(uintptr_t caller, uintptr_t base, const struct ShangouActivityBlock *block) {
     const uint32_t stackFlags = (1u << 25) | (1u << 30); // copy/dispose + signature; not global/heap
-    return base && caller == base + 0x38b20 && block &&
+    if (!base || !block) return 0;
+    // This framework has two concrete LiveActivityManager specializations: delivery and recommendations.
+    // Match each scheduler with its own callback; other work sharing the void wrapper must still run.
+    int initializer = (caller == base + 0x38b20 && (uintptr_t)block->function == base + 0x46834) ||
+        (caller == base + 0x62e00 && (uintptr_t)block->function == base + 0x69200);
+    return initializer &&
         ((uint32_t)block->flags & (stackFlags | (1u << 24) | (1u << 28))) == stackFlags &&
-        (uintptr_t)block->invoke == base + 0x25ebc && (uintptr_t)block->function == base + 0x46834;
+        (uintptr_t)block->invoke == base + 0x25ebc;
 }
 static void shangou_activity_unavailable(void *block) { (void)block; }
 static int shangou_activity_disable_copy(struct ShangouActivityBlock *copy, const struct ShangouActivityBlock *source) {
@@ -71,14 +76,18 @@ static void shangou_activity_image_added(const struct mach_header *image, intptr
     const struct mach_header_64 *header = (const struct mach_header_64 *)image;
     if (!shangou_activity_image_matches(header, shangou_activity_widget_uuid)) return;
     const struct section_64 *text = getsectbynamefromheader_64(header, "__TEXT", "__text");
-    if (!text || text->addr > 0x25ebc || text->size < 0x46844 - text->addr) return;
+    if (!text || text->addr > 0x25ebc || text->size < 0x69208 - text->addr) return;
     uintptr_t base = (uintptr_t)image;
     const uint32_t invoke[] = {0xa9be4ff4, 0xa9017bfd, 0x910043fd, 0xa9425013};
     const uint32_t initializer[] = {0xd101c3ff, 0xa9035ff8, 0xa90457f6, 0xa9054ff4};
     const uint32_t copyCall = 0x9401268d;
+    const uint32_t recommendation[] = {0xf9400a80, 0x17ffe744};
+    const uint32_t recommendationCopyCall = 0x94007dd5;
     if (memcmp((void *)(base + 0x25ebc), invoke, sizeof(invoke)) ||
         memcmp((void *)(base + 0x46834), initializer, sizeof(initializer)) ||
-        memcmp((void *)(base + 0x38b1c), &copyCall, sizeof(copyCall))) return;
+        memcmp((void *)(base + 0x38b1c), &copyCall, sizeof(copyCall)) ||
+        memcmp((void *)(base + 0x69200), recommendation, sizeof(recommendation)) ||
+        memcmp((void *)(base + 0x62dfc), &recommendationCopyCall, sizeof(recommendationCopyCall))) return;
     atomic_store_explicit(&shangou_activity_base, base, memory_order_release);
 }
 static void shangou_activity_prepare(void) {
@@ -94,7 +103,7 @@ __attribute__((noinline)) static void *shangou_activity_copy(const void *value) 
     void *copy = _Block_copy(value);
     if (selected && shangou_activity_disable_copy(copy, value) &&
         !atomic_exchange_explicit(&shangou_activity_reported, 1, memory_order_relaxed)) {
-        os_log_error(OS_LOG_DEFAULT, "[PlayTools] Shangou delivery Live Activity unavailable on this Mac runtime; initialization skipped");
+        os_log_error(OS_LOG_DEFAULT, "[PlayTools] Shangou delivery/recommendation Live Activities unavailable on this Mac runtime; initialization skipped");
     }
     return copy;
 }

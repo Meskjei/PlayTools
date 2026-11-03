@@ -92,6 +92,13 @@ public class PlayScreen: NSObject {
                 queue: .main) { notification in
                 if let window = notification.object as? UIWindow,
                    let windowScene = window.windowScene {
+                    if ProcessInfo.processInfo.environment["TOUCHSTONE_PHONE_WINDOW"] == "1" {
+                        // Catalyst's UIKit points differ from AppKit points. Constrain the actual scene before page layout.
+                        let phone = CGSize(width: 390, height: 844)
+                        windowScene.sizeRestrictions?.minimumSize = phone
+                        windowScene.sizeRestrictions?.maximumSize = phone
+                        return
+                    }
                     windowScene.sizeRestrictions?.minimumSize = CGSize(width: 0, height: 0)
                     windowScene.sizeRestrictions?.maximumSize = CGSize(width: .max, height: .max)
                 }

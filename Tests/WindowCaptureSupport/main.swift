@@ -1,6 +1,13 @@
 import AppKit
 import ScreenCaptureKit
 
+// A 390pt AppKit window can be 506pt in Catalyst. Fit UIKit's phone canvas, not a second unrelated rectangle.
+let phone = fittedPhoneViewportSize(available: CGSize(width: 2000, height: 1500), content: CGSize(width: 390, height: 844), logical: CGSize(width: 506, height: 1095.0153846153846))!
+precondition(abs(phone.width - 300.59288537549406) < 0.01)
+precondition(abs(phone.height / phone.width - 844.0 / 390.0) < 0.001)
+precondition(fittedPhoneViewportSize(available: .zero, content: CGSize(width: 390, height: 844), logical: CGSize(width: 390, height: 844)) == nil)
+precondition(fittedPhoneViewportSize(available: CGSize(width: 1000, height: 1000), content: CGSize(width: 390, height: 844), logical: .zero) == nil)
+
 class OldShareableContent: NSObject {}
 
 class CurrentShareableContent: NSObject {
