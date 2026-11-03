@@ -29,11 +29,15 @@ int main(void) {
         const unsigned char uuid[] = {0x54,0x31,0x15,0x7e,0x30,0x50,0x3d,0x18,0xad,0xf1,0xd0,0xd6,0x2d,0x65,0xc0,0xf9};
         memcpy(image.uuid.uuid, uuid, sizeof(uuid));
         assert(shangou_motion_is_unsupported(&image.header, "26B123", 1));
+        assert(shangou_motion_is_unsupported(&image.header, "23C71", 1));
+        assert(!shangou_motion_is_unsupported(&image.header, "23C72", 1));
+        assert(!shangou_motion_is_unsupported(&image.header, "23C71", 0));
         assert(!shangou_motion_is_unsupported(&image.header, "26B124", 1));
         assert(!shangou_motion_is_unsupported(&image.header, "26B123", 0));
         assert(!shangou_motion_is_unsupported(&image.header, NULL, 1));
         image.uuid.uuid[0] ^= 1;
         assert(!shangou_motion_is_unsupported(&image.header, "26B123", 1));
+        assert(!shangou_motion_is_unsupported(&image.header, "23C71", 1));
         image.uuid.uuid[0] ^= 1;
         image.uuid.cmdsize++;
         assert(!shangou_motion_image_matches(&image.header));
