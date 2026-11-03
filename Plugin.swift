@@ -31,4 +31,9 @@ public protocol Plugin: NSObjectProtocol {
     func setupScrollWheel(_ onMoved: @escaping (CGFloat, CGFloat) -> Bool)
     func urlForApplicationWithBundleIdentifier(_ value: String) -> URL?
     func setMenuBarVisible(_ value: Bool)
+    @objc optional var supportsWindowCapture: Bool { get }
+    @objc optional func captureWindow(_ window: NSObject, completion: @escaping (Data?, String?) -> Void)
+    /// Normalized coordinates in the same content rectangle used by captureWindow.
+    @objc optional func pointerInWindow(_ window: NSObject) -> CGPoint
+    @objc optional func configurePhoneWindow(_ window: NSObject) -> Bool
 }

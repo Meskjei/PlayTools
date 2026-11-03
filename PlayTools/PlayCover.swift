@@ -17,6 +17,7 @@ public class PlayCover: NSObject {
         UserPluginLoader.initialize()
         PlayScreen.shared.initialize()
         PlayInput.shared.initialize()
+        TouchstoneAutomation.startIfRequested()
         DiscordIPC.shared.initialize()
 
         if PlaySettings.shared.rootWorkDir {

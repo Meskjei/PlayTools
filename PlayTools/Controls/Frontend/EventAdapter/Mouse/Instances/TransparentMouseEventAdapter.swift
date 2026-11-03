@@ -12,7 +12,7 @@ import Foundation
 public class TransparentMouseEventAdapter: MouseEventAdapter {
     public func handleScrollWheel(deltaX: CGFloat, deltaY: CGFloat) -> Bool {
         // When editing text, scroll should effect on text input box
-        false
+        WindowMouseScroll.shared.handle(deltaX: deltaX, deltaY: deltaY)
     }
 
     public func handleMove(deltaX: CGFloat, deltaY: CGFloat) -> Bool {

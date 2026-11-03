@@ -23,12 +23,12 @@ class Toucher {
                          // Name info for debug use
                          actionName: String, keyName: String) {
         if phase == UITouch.Phase.began {
-            if tid != nil {
+            guard tid == nil, let window = screen.keyWindow else {
                 return
             }
+            keyWindow = window
+            keyView = window.hitTest(point, with: nil)
             tid = -1
-            keyWindow = screen.keyWindow
-            keyView = keyWindow!.hitTest(point, with: nil)
         } else if tid == nil {
             return
         }

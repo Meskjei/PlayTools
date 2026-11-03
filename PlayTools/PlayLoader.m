@@ -327,9 +327,12 @@ DYLD_INTERPOSE(pt_rename, rename)
 DYLD_INTERPOSE(pt_unlink, unlink)
 DYLD_INTERPOSE(pt_usleep, usleep)
 
+#include "QwenBlockCompatibility.h"
+
 @implementation PlayLoader
 
 static void __attribute__((constructor)) initialize(void) {
+    qwen_block_compat_prepare();
     [PlayCover launch];
     
     if (ue_status == 0) {

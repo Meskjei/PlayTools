@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		A002CA070000000000000003 /* WindowMouseScroll.swift in Sources */ = {isa = PBXBuildFile; fileRef = A002CA070000000000000004 /* WindowMouseScroll.swift */; };
+		A002CA070000000000000001 /* WindowCaptureGeometry.swift in Sources */ = {isa = PBXBuildFile; fileRef = A002CA070000000000000002 /* WindowCaptureGeometry.swift */; };
 		2847AE48298EFC0F00B0F983 /* PlayScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2847AE47298EFC0F00B0F983 /* PlayScreen.swift */; };
 		6E76639B28D0FAE700DE4AF9 /* Plugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E76639A28D0FAE700DE4AF9 /* Plugin.swift */; };
 		6E76639C28D0FAE700DE4AF9 /* Plugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E76639A28D0FAE700DE4AF9 /* Plugin.swift */; };
@@ -50,6 +52,7 @@
 		AA71970D287A44D200623C15 /* PlaySettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA719704287A44D200623C15 /* PlaySettings.swift */; };
 		AA71970E287A44D200623C15 /* PlayLoader.h in Headers */ = {isa = PBXBuildFile; fileRef = AA719705287A44D200623C15 /* PlayLoader.h */; };
 		AA71970F287A44D200623C15 /* PlayCover.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA719706287A44D200623C15 /* PlayCover.swift */; };
+		DAA120012F00000200000002 /* TouchstoneAutomation.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAA120012F00000200000001 /* TouchstoneAutomation.swift */; };
 		AA719759287A480D00623C15 /* PlayAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA719723287A480C00623C15 /* PlayAction.swift */; };
 		AA71975A287A480D00623C15 /* Toucher.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA719724287A480C00623C15 /* Toucher.swift */; };
 		AA719789287A480D00623C15 /* PlayInput.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA719755287A480C00623C15 /* PlayInput.swift */; };
@@ -105,6 +108,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		A002CA070000000000000004 /* WindowMouseScroll.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayTools/Controls/Frontend/EventAdapter/Mouse/WindowMouseScroll.swift; sourceTree = SOURCE_ROOT; };
+		A002CA070000000000000002 /* WindowCaptureGeometry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowCaptureGeometry.swift; sourceTree = "<group>"; };
 		2847AE47298EFC0F00B0F983 /* PlayScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayScreen.swift; sourceTree = "<group>"; };
 		6E76639628D0FA6200DE4AF9 /* AKInterface-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "AKInterface-Bridging-Header.h"; sourceTree = "<group>"; };
 		6E76639A28D0FAE700DE4AF9 /* Plugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Plugin.swift; sourceTree = "<group>"; };
@@ -145,10 +150,12 @@
 		95D474FA2C0BA77B0072797F /* JoystickElement.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JoystickElement.swift; sourceTree = "<group>"; };
 		95D474FE2C0BDAB20072797F /* DraggableButtonElement.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DraggableButtonElement.swift; sourceTree = "<group>"; };
 		AA7196D8287A447700623C15 /* PlayTools.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = PlayTools.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		DAA120012F00000100000001 /* QwenBlockCompatibility.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = QwenBlockCompatibility.h; sourceTree = "<group>"; };
 		AA719702287A44D200623C15 /* PlayLoader.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PlayLoader.m; sourceTree = "<group>"; };
 		AA719704287A44D200623C15 /* PlaySettings.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PlaySettings.swift; sourceTree = "<group>"; };
 		AA719705287A44D200623C15 /* PlayLoader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PlayLoader.h; sourceTree = "<group>"; };
 		AA719706287A44D200623C15 /* PlayCover.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PlayCover.swift; sourceTree = "<group>"; };
+		DAA120012F00000200000001 /* TouchstoneAutomation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TouchstoneAutomation.swift; sourceTree = "<group>"; };
 		AA719708287A44D200623C15 /* PlayTools.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PlayTools.h; sourceTree = "<group>"; };
 		AA71970A287A44D200623C15 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		AA719723287A480C00623C15 /* PlayAction.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PlayAction.swift; sourceTree = "<group>"; };
@@ -219,6 +226,8 @@
 			children = (
 				6E76639A28D0FAE700DE4AF9 /* Plugin.swift */,
 				6E7663A028D0FB5300DE4AF9 /* AKPlugin.swift */,
+				A002CA070000000000000004 /* WindowMouseScroll.swift */,
+				A002CA070000000000000002 /* WindowCaptureGeometry.swift */,
 				6E76639628D0FA6200DE4AF9 /* AKInterface-Bridging-Header.h */,
 			);
 			name = AKInterface;
@@ -448,8 +457,10 @@
 				AA71970A287A44D200623C15 /* Info.plist */,
 				AA719704287A44D200623C15 /* PlaySettings.swift */,
 				AA719706287A44D200623C15 /* PlayCover.swift */,
+				DAA120012F00000200000001 /* TouchstoneAutomation.swift */,
 				AA719705287A44D200623C15 /* PlayLoader.h */,
 				AA719702287A44D200623C15 /* PlayLoader.m */,
+				DAA120012F00000100000001 /* QwenBlockCompatibility.h */,
 				AA719708287A44D200623C15 /* PlayTools.h */,
 				2847AE47298EFC0F00B0F983 /* PlayScreen.swift */,
 			);
@@ -710,6 +721,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				6E7663A128D0FB5300DE4AF9 /* AKPlugin.swift in Sources */,
+				A002CA070000000000000001 /* WindowCaptureGeometry.swift in Sources */,
 				6E76639C28D0FAE700DE4AF9 /* Plugin.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -724,6 +736,7 @@
 				AA71975A287A480D00623C15 /* Toucher.swift in Sources */,
 				AA7197A1287A481500623C15 /* CircleMenuLoader.swift in Sources */,
 				6E76639B28D0FAE700DE4AF9 /* Plugin.swift in Sources */,
+				A002CA070000000000000003 /* WindowMouseScroll.swift in Sources */,
 				B1271729288284BE0025112B /* DiscordActivity.swift in Sources */,
 				EEB248592B81D074000C230A /* PlayedAppleDB.swift in Sources */,
 				954389CC2B39F03D00B063BB /* EditorView.swift in Sources */,
@@ -777,6 +790,7 @@
 				ABCECEE629750BA600746595 /* PlayedApple.swift in Sources */,
 				AA71986C287A81A000623C15 /* NSObject+Swizzle.m in Sources */,
 				AA71970F287A44D200623C15 /* PlayCover.swift in Sources */,
+				DAA120012F00000200000002 /* TouchstoneAutomation.swift in Sources */,
 				B127172528817C040025112B /* DiscordIPC.swift in Sources */,
 				AA719850287A81A000623C15 /* UITouch-KIFAdditions.m in Sources */,
 				AA71985F287A81A000623C15 /* IOHIDEvent+KIF.m in Sources */,

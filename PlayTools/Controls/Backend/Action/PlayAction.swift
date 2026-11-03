@@ -65,6 +65,7 @@ class DraggableButtonAction: ButtonAction {
         if pressed {
             Toucher.touchcam(point: point, phase: UITouch.Phase.began, tid: &id,
                              actionName: "DraggableButton", keyName: keyName)
+            guard id != nil else { return }
             self.releasePoint = point
             ActionDispatcher.register(key: KeyCodeNames.mouseMove,
                                       handler: self.onMouseMoved,
@@ -130,8 +131,8 @@ class ContinuousJoystickAction: Action {
                                  actionName: "ControllerJoystick", keyName: key)
             }
         } else if !begun {
-            begun = true
             beginTouch(point)
+            begun = id != nil
         } else {
             Toucher.touchcam(point: point, phase: UITouch.Phase.moved, tid: &id,
                              actionName: "ControllerJoystick", keyName: key)
@@ -509,6 +510,7 @@ class FakeMouseAction: Action {
 //        }
         Toucher.touchcam(point: pos, phase: UITouch.Phase.began, tid: &id,
                          actionName: "FakeMouse", keyName: "FakeMouse")
+        guard id != nil else { return }
         ActionDispatcher.register(key: KeyCodeNames.fakeMouse,
                                   handler: movementHandler,
                                   priority: .DRAGGABLE)

@@ -8,6 +8,8 @@
 import AppKit
 import CoreGraphics
 import Foundation
+import ObjectiveC.runtime
+import ScreenCaptureKit
 
 // Add a lightweight struct so we can decode only the flag we care about
 private struct AKAppSettingsData: Codable {
@@ -18,9 +20,125 @@ private struct AKAppSettingsData: Codable {
     var resizableAspectRatioHeight: Int?
 }
 
+// UIKit-on-Mac can consult the current cursor instead of the mouse event being dispatched.
+private enum MouseEventLocation {
+    static var current: NSEvent?
+
+    static let install: Void = {
+        guard let sendEvent = class_getInstanceMethod(NSApplication.self, #selector(NSApplication.sendEvent(_:))),
+              let scopedSendEvent = class_getInstanceMethod(NSApplication.self, #selector(NSApplication.playToolsSendEvent(_:))),
+              let mouseLocation = class_getInstanceMethod(NSWindow.self, #selector(getter: NSWindow.mouseLocationOutsideOfEventStream)),
+              let scopedMouseLocation = class_getInstanceMethod(NSWindow.self, #selector(NSWindow.playToolsMouseLocation)) else { return }
+        method_exchangeImplementations(sendEvent, scopedSendEvent)
+        method_exchangeImplementations(mouseLocation, scopedMouseLocation)
+    }()
+}
+
+private extension NSApplication {
+    @objc dynamic func playToolsSendEvent(_ event: NSEvent) {
+        let previous = MouseEventLocation.current
+        switch event.type {
+        case .leftMouseDown, .leftMouseUp, .leftMouseDragged, .scrollWheel:
+            MouseEventLocation.current = event
+        default:
+            MouseEventLocation.current = nil
+        }
+        defer { MouseEventLocation.current = previous }
+        playToolsSendEvent(event)
+    }
+}
+
+private extension NSWindow {
+    @objc dynamic func playToolsMouseLocation() -> NSPoint {
+        if Thread.isMainThread, let event = MouseEventLocation.current, event.window === self {
+            return event.locationInWindow
+        }
+        return playToolsMouseLocation()
+    }
+}
+
 class AKPlugin: NSObject, Plugin {
+    private weak var phoneWindow: NSWindow?
+    private var phoneCaptureScale: CGFloat?
+
+    func configurePhoneWindow(_ object: NSObject) -> Bool {
+        guard ProcessInfo.processInfo.environment["TOUCHSTONE_PHONE_WINDOW"] == "1",
+              let window = object as? NSWindow, NSApplication.shared.windows.contains(where: { $0 === window }),
+              let display = window.screen ?? NSScreen.main else { return false }
+        let visible = display.visibleFrame
+        let titleHeight = max(0, window.frame.height - window.contentLayoutRect.height)
+        guard let size = fittedPhoneWindowSize(available: CGSize(width: visible.width - 32, height: visible.height - titleHeight - 32)) else { return false }
+        window.contentMinSize = NSSize(width: min(window.contentMinSize.width, size.width), height: min(window.contentMinSize.height, size.height))
+        window.contentAspectRatio = NSSize(width: 390, height: 844)
+        window.setContentSize(size)
+        window.contentMinSize = size
+        window.contentMaxSize = size
+        window.styleMask.remove(.resizable)
+        window.collectionBehavior.remove(.fullScreenPrimary)
+        window.collectionBehavior.insert(.fullScreenNone)
+        window.setFrameOrigin(NSPoint(x: visible.midX - window.frame.width / 2, y: visible.midY - window.frame.height / 2))
+        phoneWindow = window
+        phoneCaptureScale = window.backingScaleFactor
+        return true
+    }
+
+    var supportsWindowCapture: Bool {
+        if #available(macOS 14.4, *) { return true }
+        return false
+    }
+
+    func pointerInWindow(_ object: NSObject) -> CGPoint {
+        guard let window = object as? NSWindow, NSApplication.shared.windows.contains(where: { $0 === window }) else {
+            return CGPoint(x: -1, y: -1)
+        }
+        let rect = window.contentLayoutRect, point = window.mouseLocationOutsideOfEventStream
+        guard rect.width > 0, rect.height > 0, rect.contains(point) else { return CGPoint(x: -1, y: -1) }
+        return CGPoint(x: (point.x - rect.minX) / rect.width, y: (rect.maxY - point.y) / rect.height)
+    }
+
+    func captureWindow(_ object: NSObject, completion: @escaping (Data?, String?) -> Void) {
+        guard #available(macOS 14.4, *), let window = object as? NSWindow,
+              NSApplication.shared.windows.contains(where: { $0 === window }),
+              window.isVisible, !window.isMiniaturized, window.windowNumber > 0 else {
+            completion(nil, "capture_window_unavailable"); return
+        }
+        let number = window.windowNumber, frame = window.frame, contentRect = window.contentLayoutRect
+        let scale = window.backingScaleFactor
+        let outputScale = window === phoneWindow ? phoneCaptureScale ?? scale : scale
+        Task { @MainActor in
+            do {
+                // This API only lists content available to this process; never fall back to desktop enumeration.
+                let content = try await SCShareableContent.currentProcess
+                guard let own = content.windows.first(where: { $0.windowID == CGWindowID(number) &&
+                    $0.owningApplication?.processID == ProcessInfo.processInfo.processIdentifier }) else {
+                    completion(nil, "capture_window_not_owned"); return
+                }
+                let filter = SCContentFilter(desktopIndependentWindow: own)
+                let config = SCStreamConfiguration()
+                config.width = Int(ceil(frame.width * outputScale)); config.height = Int(ceil(frame.height * outputScale))
+                config.showsCursor = false
+                config.ignoreShadowsSingleWindow = true
+                config.scalesToFit = true
+                config.captureResolution = .best
+                let image = try await SCScreenshotManager.captureImage(contentFilter: filter, configuration: config)
+                guard window.isVisible, !window.isMiniaturized, window.windowNumber == number,
+                      window.frame == frame, window.contentLayoutRect == contentRect, window.backingScaleFactor == scale else {
+                    completion(nil, "window_resized"); return
+                }
+                guard let rect = windowContentCrop(frameSize: frame.size, contentRect: contentRect,
+                                                   imageSize: CGSize(width: image.width, height: image.height)),
+                      let cropped = image.cropping(to: rect),
+                      let png = NSBitmapImageRep(cgImage: cropped).representation(using: .png, properties: [:]) else {
+                    completion(nil, "capture_unavailable"); return
+                }
+                completion(png, nil)
+            } catch { completion(nil, "capture_compositor_unavailable") }
+        }
+    }
+
     required override init() {
         super.init()
+        _ = MouseEventLocation.install
         if let window = NSApplication.shared.windows.first {
             window.styleMask.insert([.resizable])
             window.collectionBehavior = [.fullScreenPrimary, .managed, .participatesInCycle]
@@ -52,7 +170,7 @@ class AKPlugin: NSObject, Plugin {
             object: nil,
             queue: .main) { notif in
                 guard let win = notif.object as? NSWindow else { return }
-                win.styleMask.insert([.resizable])
+                if win !== self.phoneWindow { win.styleMask.insert([.resizable]) }
 
                 if self.hideTitleBarSetting == true {
                     win.styleMask.insert([.fullSizeContentView])
@@ -66,7 +184,9 @@ class AKPlugin: NSObject, Plugin {
                     win.level = .floating
                 }
 
-                if let aspectRatio = self.aspectRatioSetting {
+                if win === self.phoneWindow {
+                    win.contentAspectRatio = NSSize(width: 390, height: 844)
+                } else if let aspectRatio = self.aspectRatioSetting {
                     win.contentAspectRatio = aspectRatio
                 }
         }

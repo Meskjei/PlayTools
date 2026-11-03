@@ -15,6 +15,8 @@
 #import <AVFoundation/AVFoundation.h>
 #import <CoreMotion/CoreMotion.h>
 #import <GameController/GameController.h>
+#import "../../ShangouMotionCompatibility.h"
+#import "../../ShangouTabCompatibility.h"
 
 __attribute__((visibility("hidden")))
 @interface PTSwizzleLoader : NSObject
@@ -354,7 +356,11 @@ bool menuWasCreated = false;
         [objc_getClass("AVAudioSession") swizzleInstanceMethod:@selector(requestRecordPermission:) withMethod:@selector(hook_requestRecordPermission:)];
     }
 
-    if ([[PlaySettings shared] limitMotionUpdateFrequency]) {
+    shangou_install_tab_compatibility();
+    if (shangou_should_disable_motion()) {
+        shangou_install_unavailable_motion();
+        NSLog(@"[PlayTools] Shangou motion unavailable on the affected Mac runtime");
+    } else if ([[PlaySettings shared] limitMotionUpdateFrequency]) {
         [objc_getClass("CMMotionManager") swizzleInstanceMethod:@selector(init) withMethod:@selector(hook_CMMotionManager_init)];
     }
 

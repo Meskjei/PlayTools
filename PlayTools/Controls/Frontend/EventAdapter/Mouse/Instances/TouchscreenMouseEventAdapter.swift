@@ -50,10 +50,9 @@ public class TouchscreenMouseEventAdapter: MouseEventAdapter {
     }
 
     public func handleScrollWheel(deltaX: CGFloat, deltaY: CGFloat) -> Bool {
-        _ = ActionDispatcher.dispatch(key: KeyCodeNames.scrollWheelDrag, valueX: deltaX, valueY: deltaY)
-        // I dont know why but this is the logic before the refactor.
-        // Might be a mistake but keeping it for now
-        return false
+        // Preserve mapped-wheel forwarding; only consume an otherwise unmapped Metal scroll.
+        if ActionDispatcher.dispatch(key: KeyCodeNames.scrollWheelDrag, valueX: deltaX, valueY: deltaY) { return false }
+        return WindowMouseScroll.shared.handle(deltaX: deltaX, deltaY: deltaY)
     }
 
     public func handleMove(deltaX: CGFloat, deltaY: CGFloat) -> Bool {
