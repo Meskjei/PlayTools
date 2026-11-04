@@ -328,12 +328,14 @@ DYLD_INTERPOSE(pt_unlink, unlink)
 DYLD_INTERPOSE(pt_usleep, usleep)
 
 #include "QwenBlockCompatibility.h"
+#include "QwenActivityCompatibility.h"
 #include "ShangouLiveActivityCompatibility.h"
 
 @implementation PlayLoader
 
 static void __attribute__((constructor)) initialize(void) {
     qwen_block_compat_prepare();
+    qwen_activity_prepare();
     shangou_activity_prepare();
     [PlayCover launch];
     
