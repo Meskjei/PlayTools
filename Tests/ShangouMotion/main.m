@@ -30,6 +30,10 @@ int main(void) {
         memcpy(image.uuid.uuid, uuid, sizeof(uuid));
         assert(shangou_motion_is_unsupported(&image.header, "26B123", 1));
         assert(shangou_motion_is_unsupported(&image.header, "23C71", 1));
+        assert(shangou_motion_is_unsupported(&image.header, "24G517", 1));
+        assert(!shangou_motion_is_unsupported(&image.header, "24G516", 1));
+        assert(!shangou_motion_is_unsupported(&image.header, "24G518", 1));
+        assert(!shangou_motion_is_unsupported(&image.header, "24G517", 0));
         assert(!shangou_motion_is_unsupported(&image.header, "23C72", 1));
         assert(!shangou_motion_is_unsupported(&image.header, "23C71", 0));
         assert(!shangou_motion_is_unsupported(&image.header, "26B124", 1));
@@ -38,6 +42,7 @@ int main(void) {
         image.uuid.uuid[0] ^= 1;
         assert(!shangou_motion_is_unsupported(&image.header, "26B123", 1));
         assert(!shangou_motion_is_unsupported(&image.header, "23C71", 1));
+        assert(!shangou_motion_is_unsupported(&image.header, "24G517", 1));
         image.uuid.uuid[0] ^= 1;
         image.uuid.cmdsize++;
         assert(!shangou_motion_image_matches(&image.header));

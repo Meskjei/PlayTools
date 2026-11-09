@@ -30,7 +30,8 @@ static int shangou_motion_image_matches(const struct mach_header_64 *header) {
 static int shangou_motion_is_unsupported(const struct mach_header_64 *header,
                                           const char *hostBuild, int hasVirtualDevice) {
     return hasVirtualDevice && hostBuild &&
-        (strcmp(hostBuild, "26B123") == 0 || strcmp(hostBuild, "23C71") == 0) &&
+        (strcmp(hostBuild, "26B123") == 0 || strcmp(hostBuild, "23C71") == 0 ||
+         strcmp(hostBuild, "24G517") == 0) &&
         shangou_motion_image_matches(header);
 }
 
