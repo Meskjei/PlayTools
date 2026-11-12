@@ -64,6 +64,65 @@ final class TouchstoneAutomation {
         guard let request = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any],
               let suppliedToken = request["token"] as? String, suppliedToken == token,
               let command = request["command"] as? String else { reply(connection, error: "unauthorized_or_invalid"); return }
+        switch command {
+        case "recordingStop":
+            guard AKInterface.shared?.supportsWindowRecording == true,
+                  let stopRecording = AKInterface.shared?.stopWindowRecording else {
+                reply(connection, error: "recording_unsupported"); return
+            }
+            guard let recordingId = request["recordingId"] as? String else {
+                reply(connection, error: "invalid_recording_id"); return
+            }
+            stopRecording(recordingId) { [weak self] dict, error in
+                DispatchQueue.main.async {
+                    guard let self = self else { connection.cancel(); return }
+                    if let error = error {
+                        self.reply(connection, error: error)
+                    } else if let result = dict as? [String: Any] {
+                        self.reply(connection, result: result)
+                    } else {
+                        self.reply(connection, error: "capture_unavailable")
+                    }
+                }
+            }
+            return
+        case "recordingRead":
+            guard AKInterface.shared?.supportsWindowRecording == true,
+                  let readRecording = AKInterface.shared?.readWindowRecording else {
+                reply(connection, error: "recording_unsupported"); return
+            }
+            guard let recordingId = request["recordingId"] as? String else {
+                reply(connection, error: "invalid_recording_id"); return
+            }
+            guard let number = request["offset"] as? NSNumber,
+                  Double(number.intValue) == number.doubleValue else {
+                reply(connection, error: "invalid_recording_offset"); return
+            }
+            let raw = readRecording(recordingId, number.intValue, 256 * 1024) as? [String: Any] ?? [:]
+            if let error = raw["error"] as? String {
+                reply(connection, error: error)
+            } else {
+                reply(connection, result: raw)
+            }
+            return
+        case "recordingRelease":
+            guard AKInterface.shared?.supportsWindowRecording == true,
+                  let releaseRecording = AKInterface.shared?.releaseWindowRecording else {
+                reply(connection, error: "recording_unsupported"); return
+            }
+            guard let recordingId = request["recordingId"] as? String else {
+                reply(connection, error: "invalid_recording_id"); return
+            }
+            let raw = releaseRecording(recordingId) as? [String: Any] ?? [:]
+            if let error = raw["error"] as? String {
+                reply(connection, error: error)
+            } else {
+                reply(connection, result: raw)
+            }
+            return
+        default:
+            break
+        }
         guard let window = screen.keyWindow, !window.isHidden, window.bounds.width > 0, window.bounds.height > 0 else {
             reply(connection, error: "window_unavailable"); return
         }
@@ -79,6 +138,10 @@ final class TouchstoneAutomation {
                     phoneWindowConfigured = configure(native)
                 }
             }
+            var capabilities = ["activate", "screenshot", "tree", "tap", "swipe", "longPress", "type", "clearText"]
+            if AKInterface.shared?.supportsWindowRecording == true {
+                capabilities.append("recording")
+            }
             reply(connection, result: ["protocol": 1, "bundleId": Bundle.main.bundleIdentifier ?? "",
                 "pid": ProcessInfo.processInfo.processIdentifier, "width": window.bounds.width, "height": window.bounds.height,
                 "appVersion": Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "",
@@ -87,7 +150,37 @@ final class TouchstoneAutomation {
                 "viewportFixed": phoneWindowConfigured,
                 "foreground": UIApplication.shared.applicationState == .active,
                 "runtime": ["discord": "removed"],
-                "capabilities": ["activate", "screenshot", "tree", "tap", "swipe", "longPress", "type", "clearText"]])
+                "capabilities": capabilities])
+        case "recordingStart":
+            guard AKInterface.shared?.supportsWindowRecording == true,
+                  let startRecording = AKInterface.shared?.startWindowRecording else {
+                reply(connection, error: "recording_unsupported"); return
+            }
+            guard let recordingId = request["recordingId"] as? String else {
+                reply(connection, error: "invalid_recording_id"); return
+            }
+            guard let nativeWindow = window.nsWindow else {
+                reply(connection, error: "capture_window_unavailable"); return
+            }
+            if !phoneWindowConfigured {
+                if let configure = AKInterface.shared?.configurePhoneViewport {
+                    phoneWindowConfigured = configure(nativeWindow, window.bounds.size)
+                } else if let configure = AKInterface.shared?.configurePhoneWindow {
+                    phoneWindowConfigured = configure(nativeWindow)
+                }
+            }
+            startRecording(nativeWindow, recordingId) { [weak self] dict, error in
+                DispatchQueue.main.async {
+                    guard let self = self else { connection.cancel(); return }
+                    if let error = error {
+                        self.reply(connection, error: error)
+                    } else if let result = dict as? [String: Any] {
+                        self.reply(connection, result: result)
+                    } else {
+                        self.reply(connection, error: "capture_unavailable")
+                    }
+                }
+            }
         case "activate":
             guard let activate = AKInterface.shared?.activateOwnApplication, activate() else {
                 reply(connection, error: "activation_unavailable"); return

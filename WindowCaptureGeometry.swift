@@ -28,3 +28,22 @@ func windowContentCrop(frameSize: CGSize, contentRect: CGRect, imageSize: CGSize
     guard CGRect(origin: .zero, size: imageSize).contains(rect) else { return nil }
     return rect
 }
+
+/// ScreenCaptureKit's stream sourceRect uses top-left window point coordinates.
+func windowRecordingSourceRect(frameSize: CGSize, contentRect: CGRect) -> CGRect? {
+    let values = [frameSize.width, frameSize.height,
+                  contentRect.minX, contentRect.minY, contentRect.width, contentRect.height]
+    guard values.allSatisfy({ $0.isFinite }), frameSize.width > 0, frameSize.height > 0,
+          !contentRect.isEmpty, CGRect(origin: .zero, size: frameSize).contains(contentRect) else { return nil }
+    let rect = CGRect(x: contentRect.minX, y: frameSize.height - contentRect.maxY,
+                      width: contentRect.width, height: contentRect.height)
+    guard CGRect(origin: .zero, size: frameSize).contains(rect) else { return nil }
+    return rect
+}
+
+/// H.264 4:2:0 requires positive even pixel dimensions.
+func evenRecordingPixelDimension(_ rawPixels: CGFloat) -> Int? {
+    guard rawPixels.isFinite, rawPixels >= 2 else { return nil }
+    let even = Int(rawPixels.rounded()) & ~1
+    return even >= 2 ? even : nil
+}

@@ -56,3 +56,41 @@ plugin.captureWindow(window) { png, error in
 }
 precondition(rejected, "Direct capture must reject unavailable APIs before starting an asynchronous capture")
 print("Direct capture respects the unsupported-runtime guard")
+
+// Recording geometry & selector guards
+let sourceRect = windowRecordingSourceRect(frameSize: CGSize(width: 390, height: 872),
+                                           contentRect: CGRect(x: 0, y: 0, width: 390, height: 844))!
+precondition(sourceRect == CGRect(x: 0, y: 28, width: 390, height: 844))
+precondition(evenRecordingPixelDimension(780) == 780)
+precondition(evenRecordingPixelDimension(781) == 780)
+precondition(evenRecordingPixelDimension(1) == nil)
+precondition(WindowRecordingSupport.isValidRecordingId("run_abc-123"))
+precondition(!WindowRecordingSupport.isValidRecordingId("../escape"))
+
+precondition(!WindowRecordingSupport.hasRequiredMethods(
+    shareableContent: OldShareableContent.self,
+    contentFilter: NSClassFromString("SCContentFilter"),
+    streamClass: NSClassFromString("SCStream"),
+    assetWriter: NSClassFromString("AVAssetWriter")
+))
+precondition(!WindowRecordingSupport.hasRequiredMethods(
+    shareableContent: CurrentShareableContent.self,
+    contentFilter: NSObject.self,
+    streamClass: NSClassFromString("SCStream"),
+    assetWriter: NSClassFromString("AVAssetWriter")
+))
+if #available(macOS 14.4, *) {
+    precondition(WindowRecordingSupport.isAvailable)
+}
+
+class LegacyRecordingPlugin: AKPlugin {
+    override var supportsWindowRecording: Bool { false }
+}
+let legacyRec = LegacyRecordingPlugin()
+var recRejected = false
+legacyRec.startWindowRecording(window, recordingId: "run_legacy") { info, error in
+    precondition(info == nil && error == "recording_unsupported")
+    recRejected = true
+}
+precondition(recRejected, "Direct recording must reject unavailable APIs synchronously")
+print("Window recording capability checks passed")

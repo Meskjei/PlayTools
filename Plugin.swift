@@ -38,4 +38,14 @@ public protocol Plugin: NSObjectProtocol {
     @objc optional func pointerInWindow(_ window: NSObject) -> CGPoint
     @objc optional func configurePhoneWindow(_ window: NSObject) -> Bool
     @objc optional func configurePhoneViewport(_ window: NSObject, logicalSize: CGSize) -> Bool
+    @objc optional var supportsWindowRecording: Bool { get }
+    @objc optional func startWindowRecording(_ window: NSObject,
+                                             recordingId: String,
+                                             completion: @escaping (NSDictionary?, String?) -> Void)
+    @objc optional func stopWindowRecording(_ recordingId: String,
+                                            completion: @escaping (NSDictionary?, String?) -> Void)
+    @objc optional func readWindowRecording(_ recordingId: String,
+                                            offset: Int,
+                                            maxLength: Int) -> NSDictionary
+    @objc optional func releaseWindowRecording(_ recordingId: String) -> NSDictionary
 }
